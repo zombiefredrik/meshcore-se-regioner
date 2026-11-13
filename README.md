@@ -273,7 +273,8 @@ Trädet ovan är till för människor, inte för repeatern.
 
 ### Varför inte `eu`?
 
-Ett tidigare utkast lät alla repeatrar bära `eu` redan nu, "reserverad för senare". Det är borttaget:
+Förslaget lägger inte till `eu`. Ett tidigare utkast lät alla repeatrar bära `eu` redan nu,
+"reserverad för senare". Det är borttaget:
 
 - **Ett scope är en etikett, inte ett lås.** Vem som helst kan skicka med `eu`, och varje repeater
   som bär det skickar vidare. Inom Sverige skulle `eu` bete sig precis som `se` från första dagen.
@@ -284,7 +285,9 @@ Ett tidigare utkast lät alla repeatrar bära `eu` redan nu, "reserverad för se
 - **Vinsten är liten.** Att lägga till ett namn senare är ett kommando per repeater, och ett
   gränsöverskridande scope behöver ändå en egen utrullning och pilot.
 
-Bär inte `eu` på repeatrar, companions eller kanaler förrän ett sådant beslut finns.
+Repeatrar som redan bär `eu` och `europe`, till exempel från meshat.se:s guider, kan behålla dem:
+de stör inte länet eller `se`. Sätt inte `eu` som scope på companions eller kanaler förrän ett
+gränsöverskridande beslut finns.
 
 ## Utrullning
 
@@ -294,7 +297,7 @@ kantrepeatrar mot ett grannlän).
 
 | Fas | Vem | Vad |
 | --- | --- | --- |
-| 1 | Repeatrar | Lägg till nya namn bredvid gamla. Behåll befintlig trafikpolicy, hoppgränser och default scope. |
+| 1 | Repeatrar | Lägg till nya namn bredvid gamla, länet som hemregion och `se` som default scope. Behåll befintlig trafikpolicy. |
 | 2 | Pilot och migration | Verifiera radiovägar och versioner i länet. Migrera companions och bottar först när deras vägar stöder namnen. Nationell Public beslutas separat, av länen tillsammans. |
 | 3 | Städning | Ta bort gamla namn först när berörda användare, kanaler och bottar har migrerat och återställning är förberedd. |
 | 4 | Vid behov | Länet beslutar separat om begränsning av trafik utan scope efter mätning och kontroll av beroende radiovägar. |
@@ -305,8 +308,8 @@ kantrepeatrar mot ett grannlän).
 ### Fas 1: Repeatrar
 
 Fas 1 är förberedande: lägg till länet och `se` utan att ta bort gamla namn eller
-ändra befintlig trafikpolicy. Companions och bottar ändrar ingenting i den här fasen. Repeaterns
-default scope och hoppgränser behålls också.
+ändra befintlig trafikpolicy. Companions och bottar ändrar ingenting i den här fasen. Repeatern
+får länet som hemregion och `se` som default scope, se steg 3.
 
 Skriv kommandona ett i taget i repeaterns kommandorad: i MeshCore-appen öppnar du repeatern, loggar
 in som admin och använder kommandorutan, eller så använder du USB-konsolen. Vänta på svaret och kontrollera att det inte börjar med `Err` innan du
@@ -348,8 +351,19 @@ inte redan finns:
 
 ```
 region def se-jkp|* se
+region home se-jkp
+region default se
+set flood.max.unscoped 16
 region save
 ```
+
+- **`region home`** är länet. Repeatern sparar och visar det (`^` i `region`) men använder det inte
+  för vidarebefordran. Firmware med autosvar tar sin testkanal därifrån, `#test-se-jkp`.
+- **`region default se`** är det scope repeaterns egna flood-adverts skickas med, så att de når hela
+  Sverige och inte stannar vid länsgränsen. En repeater som inte bär `se` släpper dem, så sätt
+  det när repeatrarna runt omkring har fått `se` i fas 1.
+- **`set flood.max.unscoped 16`** låter trafik utan scope gå 16 hopp. Firmware har 64 som standard;
+  16 räcker långt över länet. `set` sparas direkt.
 
 **Granska befintliga namn först.** `region def` tar inte bort andra namn, men flyttar föräldern
 för namn som redan finns och tillåter flood för alla namn i kommandot. Finns något av namnen
@@ -359,7 +373,7 @@ Ett fel kan lämna en delvis ändrad lista: kontrollera med `region` innan du sp
 
 Har länet valt att behålla sin SCB-kod, till exempel `se06`, finns namnet redan: lägg bara till `se`.
 
-Ändra inte `region allowf *`, `region denyf *`, default scope eller hoppgränser i fas 1.
+Ändra inte `region allowf *` eller `region denyf *` i fas 1.
 
 | Kommando | Vad det gör |
 | --- | --- |
@@ -385,18 +399,18 @@ båda orterna har egna repeatrar. Kontrollera vilka vägar som är beroende av n
 region
 ```
 
-För Jönköpings län ska de nya namnen finnas och tillåta flood. Om `*` tidigare var tillåtet och
-hemregionen var `*` kan listan se ut så här:
+För Jönköpings län ska de nya namnen finnas och tillåta flood, och länet vara hemregion. Om `*`
+tidigare var tillåtet kan listan se ut så här:
 
 ```
-*^ F
-se-jkp F
+* F
+se-jkp^ F
 se F
 ```
 
 `F` betyder att repeatern skickar vidare det namnet. `^` markerar hemregion, inte default scope.
 `*` ska behålla sin tidigare `F`-flagga; om den tidigare saknade `F` ska den fortfarande sakna den.
-Kontrollera också med `region default` att standard-scope är oförändrat. Gamla namn som `se06`
+Kontrollera också att `region default` svarar `se` och att `region home` svarar länet. Gamla namn som `se06`
 behåller sina föräldrar och flaggor tills migrationen är verifierad. Kontrollera igen efter omstart.
 
 #### Tillåt eller släpp, snabbreferens
@@ -522,6 +536,8 @@ region
 ```
 
 Återställ ändrad hoppgräns med `set flood.max.unscoped <tidigare värde>` och kontrollera med `get`.
+Repeaterns tidigare default scope och hemregion återställs med `region default <tidigare>` och
+`region home <tidigare>` från anteckningarna i steg 2.
 Återställ också companionens standard och kanalscopes i appen.
 
 Har gamla namn tagits bort: återskapa dem med `region put <namn> <tidigare förälder>`, föräldrar
@@ -635,8 +651,8 @@ Det här är inte avgjort, och synpunkter är välkomna som issues eller pull re
    är en första gissning.
 4. **MQTT-koderna.** meshat.se använder flygplatskoder per län för MQTT. Kan länets namn här ersätta
    dem, så att det bara finns ett kodsystem? Det avgör varje län.
-5. **`eu` och `europe`.** meshat.se har båda. Förslaget använder ingen av dem; ett scope över
-   landsgränser beslutas, om det behövs, tillsammans med grannländerna.
+5. **`eu` och `europe`.** meshat.se har båda, och repeatrar får behålla dem. Förslaget lägger inte
+   till dem; ett scope över landsgränser beslutas, om det behövs, tillsammans med grannländerna.
 6. **Tidplan.** Varje län sätter sin egen. Inga datum är satta för `se`.
 7. **Hur länen kommer överens.** `se` och nationell Public angår alla län, men förslaget säger inte
    hur länen tar ett gemensamt beslut, eller vem som talar för ett län. Ett förslag är att ett
